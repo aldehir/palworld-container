@@ -1,0 +1,92 @@
+#!/usr/bin/python3
+
+import yaml
+import argparse
+
+
+class UEEnum:
+    """Unreal Engine Enum Type
+
+    Some keys in UE are enum values and not strings, so they should not be
+    surrounded by quotes. To represent this, add an `!enum` tag so we know
+    which keys to not treat as strings.
+    """
+    def __init__(self, identifier):
+        self.identifier = identifier
+
+    def __str__(self):
+        return self.identifier
+
+    def __repr__(self):
+        return f"UEEnum({self.identifier})"
+
+    @classmethod
+    def representer(cls, dumper, data):
+        return dumper.represent_scalar("!enum", data.identifier)
+
+    @classmethod
+    def constructor(cls, loader, node):
+        value = loader.construct_scalar(node)
+        return cls(value)
+
+
+yaml.add_representer(UEEnum, UEEnum.representer)
+yaml.add_constructor("!enum", UEEnum.constructor)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.set_defaults(func=None)
+
+    subparsers = parser.add_subparsers()
+
+    settings_parser = subparsers.add_parser("generate-settings")
+    settings_parser.set_defaults(func=generate_settings)
+    settings_parser.add_argument("input", help="Input YAML Settings")
+    settings_parser.add_argument("output", help="Output file")
+
+    args = parser.parse_args()
+    if args.func:
+        args.func(args)
+
+
+def generate_settings(args):
+    with open(args.input, "r") as f:
+        settings = yaml.full_load(f)
+
+    with open(args.output, "w") as f:
+        write_settings(f, settings)
+
+
+def write_settings(f, settings):
+    pairs = [create_pair(k, v) for k, v in settings.items()]
+
+    f.write("[/Script/Pal.PalGameWorldSettings]\n")
+    f.write("OptionSettings=(")
+    f.write(",".join(pairs))
+    f.write(")\n")
+
+
+def create_pair(key, value):
+    value_str = None
+    if isinstance(value, bool):
+        value_str = "False"
+        if value:
+            value_str = "True"
+    elif isinstance(value, int):
+        value_str = f"{value:d}"
+    elif isinstance(value, float):
+        value_str = f"{value:0.6f}"
+    elif isinstance(value, str):
+        value_str = f'"{value}"'
+    elif isinstance(value, UEEnum):
+        value_str = str(value)
+
+    if value_str is None:
+        raise TypeError(f"Value for {key} is of an unsupported type")
+
+    return f"{key}={value_str}"
+
+
+if __name__ == "__main__":
+    main()
