@@ -22,21 +22,20 @@ RUN dnf update -y; \
     chown -R steam:steam /steam; \
     chmod +x /steam/linux32/steamcmd;
 
-WORKDIR /palworld
+WORKDIR /palworld-scripts
 
-COPY update.script /palworld/update.script
+COPY update.script /palworld-scripts/update.script
 
 RUN runuser -u steam steamcmd +quit; \
     runuser -u steam steamcmd +quit; \
-    install -o steam -g steam -d /data /palworld/Pal; \
-    ln -sT /data /palworld/Pal/Saved;
+    install -o steam -g steam -d /config /palworld;
 
-COPY palworld-helper /palworld/palworld-helper
+COPY palworld-helper /palworld-scripts/palworld-helper
 COPY entrypoint.sh /entrypoint.sh
 
 EXPOSE 8211/udp
 
 VOLUME /config
-VOLUME /data
+VOLUME /palworld
 
 ENTRYPOINT ["/entrypoint.sh"]
