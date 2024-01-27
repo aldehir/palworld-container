@@ -28,10 +28,8 @@ COPY update.script /palworld/update.script
 
 RUN runuser -u steam steamcmd +quit; \
     runuser -u steam steamcmd +quit; \
-    runuser -u steam steamcmd +runscript /palworld/update.script; \
-    [[ -e "/palworld/Pal/Saved" ]] && mv /palworld/Pal/Saved /palworld/Pal/Saved.init; \
-    install -o steam -g steam -d /data; \
-    ln -s /data /palworld/Pal/Saved;
+    install -o steam -g steam -d /data /palworld/Pal; \
+    ln -sT /data /palworld/Pal/Saved;
 
 COPY palworld-helper /palworld/palworld-helper
 COPY entrypoint.sh /entrypoint.sh
