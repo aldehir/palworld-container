@@ -33,4 +33,4 @@ if [[ -e "/config/settings.yml" ]]; then
   chown steam:steam /palworld/Pal/Saved/Config/LinuxServer/PalWorldSettings.ini
 fi
 
-exec runuser -u steam /palworld/PalServer.sh "$@"
+exec runuser -u steam -- /palworld/PalServer.sh "$@"
